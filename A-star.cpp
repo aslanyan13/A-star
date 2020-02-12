@@ -10,6 +10,32 @@ using namespace std;
 
 const int HEIGHT = 20, WIDTH = 60;
 
+// MAP
+// # - let
+// . - free cell
+const char map[HEIGHT][WIDTH] = {
+	"...#.......................................................",
+	"...#.......................................................",
+	"...#.......................................................",
+	"...#.......................................................",
+	"...#.......................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................................................",
+	"...........................#...............................",
+	"...........................#...............................",
+	"...........................#...............................",
+	"...........................#...............................",
+	"...........................#..............................."
+};
+
 // Colors codes
 enum ConsoleColor
 {
@@ -41,8 +67,8 @@ class Cell {
 public:
 	int x, y;
 	char sym;
-	bool is_;
-	Cell *cameFrom;
+	bool isLet;
+	Cell* cameFrom;
 	float f; // Sum of g and h
 	float g; // Cost of step
 	float h; // Heuristic (Aproximate distance to goal)
@@ -50,16 +76,15 @@ public:
 
 	void calcF() { f = g + h; }
 	Cell() {
-		is_ = true;
+		isLet = true;
 	};
 
-	Cell(int X, int Y, bool state = true) :x(X), y(Y), is_(state) { };
+	Cell(int X, int Y, bool state = true) :x(X), y(Y), isLet(state) { };
 
 	void setPos(int X, int Y) {
 		x = X;
 		y = Y;
-		sym = '.';
-		is_ = true;
+		isLet = true;
 	};
 
 	bool operator==(Cell obj) {
@@ -92,10 +117,19 @@ int main()
 
 	Cell area[HEIGHT][WIDTH];
 
-	for (i = 0; i < HEIGHT; i++)
+	for (i = 0; i < HEIGHT; i++)		
 		for (j = 0; j < WIDTH; j++) {
 			area[i][j].setPos(j, i);
 			area[i][j].g = 80;
+			if (map[i][j] == '#') {
+				area[i][j].isLet = false;
+				area[i][j].sym = '#';
+			}
+			else {
+				area[i][j].isLet = true;
+				area[i][j].sym = '.';
+			}
+			
 		}
 
 	vector <Cell> openSet, closeSet;
@@ -141,26 +175,35 @@ int main()
 		for (i = 0; i < neighbors.size(); i++)
 		{
 			float g_tmp = current.g + 1;
-			if (g_tmp < neighbors[i].g) {
+			if (g_tmp < neighbors[i].g && neighbors[i].isLet == true) {
+				
 				neighbors[i].cameFrom = &path[k];
 				neighbors[i].g = g_tmp;
 				neighbors[i].f = g_tmp + distance(neighbors[i], area[targetY][targetX]);
 
-				if ( find(openSet.begin(), openSet.end(), neighbors[i]) == openSet.end() )
+				if (find(openSet.begin(), openSet.end(), neighbors[i]) == openSet.end())
 					openSet.push_back(neighbors[i]);
 			}
-			
+
 		}
 
 		k++;
 		//Sleep(400);
 	}
 
-	// cout << openSet.size() << endl;
+	cout << openSet.size() << endl;
 
 	for (int i = 0; i < path.size(); i++) {
 		area[path[i].y][path[i].x].sym = '+';
 	}
+
+	/*
+	Cell current = openSet[openSet.size() - 1];
+	do {
+		cout << "Came from X: " << current.x << " Y: " << current.y << endl;
+		current = *current.cameFrom;
+	} while (current.cameFrom != NULL);
+	*/
 
 	area[startY][startX].sym = 'S';
 	area[targetY][targetX].sym = 'F';
@@ -171,6 +214,7 @@ int main()
 			if (area[i][j].sym == 'S') SetColor(LightGreen, Black);
 			if (area[i][j].sym == 'F') SetColor(LightRed, Black);
 			if (area[i][j].sym == '.') SetColor(DarkGray, Black);
+			if (area[i][j].sym == '#') SetColor(Red, Black);
 			cout << area[i][j].sym;
 		}
 		cout << endl;
