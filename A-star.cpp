@@ -10,6 +10,7 @@ using namespace std;
 
 const int HEIGHT = 20, WIDTH = 60;
 
+// Colors codes
 enum ConsoleColor
 {
 	Black = 0,
@@ -30,7 +31,6 @@ enum ConsoleColor
 	White = 15
 };
 
-// устанавливает цвет текста и подложки в консоли
 void SetColor(int text, int background)
 {
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
