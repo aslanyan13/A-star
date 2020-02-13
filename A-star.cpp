@@ -2,6 +2,7 @@
 #include <math.h>
 #include <ctime>
 #include <cstdlib>
+#include <conio.h>
 #include <vector>
 #include <algorithm>
 #include <Windows.h>
@@ -14,26 +15,26 @@ const int HEIGHT = 20, WIDTH = 60;
 // # - let
 // . - free cell
 const char map[HEIGHT][WIDTH] = {
-	"...#.......................................................",
-	"...#.......................................................",
-	"...#.......................................................",
-	"...#.......................................................",
-	"...#.......................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................................................",
-	"...........................#...............................",
-	"...........................#...............................",
-	"...........................#...............................",
-	"...........................#...............................",
-	"...........................#..............................."
+	"...#...............................#..........#............",
+	"...#...............................#.......................",
+	"...################### #############..........#............",
+	"...#...............................################ #######",
+	"...#..............#................#.......................",
+	"..................#................#.......................",
+	"...#..............##################.......................",
+	"...#..............#................#.......................",
+	"...####### ########........................................",
+	"...#...........#...................#.......................",
+	"...#...........#...................#.......................",
+	"...#...........#...................#.......................",
+	"...#...........#...........############## #################",
+	"...#.......................#................#..............",
+	"...#...........#...........#................#..............",
+	"...################### #####................#..............",
+	"...#......#................######### #.....................",
+	"...#......#..........#####.#.........#### ###..............",
+	"...#.................#.....#.........#......#..............",
+	"...#......#..........#.....#.........#......#.............."
 };
 
 // Colors codes
@@ -57,6 +58,11 @@ enum ConsoleColor
 	White = 15
 };
 
+void gotoxy(int x, int y) {
+	COORD coord = { x, y };
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
 void SetColor(int text, int background)
 {
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -68,29 +74,27 @@ public:
 	int x, y;
 	char sym;
 	bool isLet;
-	Cell* cameFrom;
+	int cameFrom;
 	float f; // Sum of g and h
 	float g; // Cost of step
 	float h; // Heuristic (Aproximate distance to goal)
 
 
 	void calcF() { f = g + h; }
-	Cell() {
-		isLet = true;
-	};
+	Cell() {};
 
 	Cell(int X, int Y, bool state = true) :x(X), y(Y), isLet(state) { };
 
 	void setPos(int X, int Y) {
 		x = X;
 		y = Y;
-		isLet = true;
 	};
 
 	bool operator==(Cell obj) {
 		return this->x == obj.x && this->y == obj.y;
 	}
 
+	// Returns neighbors
 	vector <Cell> getNeighbors(Cell area[][WIDTH]) {
 		vector <Cell> neighbors;
 
@@ -111,8 +115,9 @@ float distance(Cell start, Cell finish) {
 
 int main()
 {
+	system("cls");
+	//gotoxy(0, 0);
 	srand(time(NULL));
-
 	int i, j;
 
 	Cell area[HEIGHT][WIDTH];
@@ -120,7 +125,7 @@ int main()
 	for (i = 0; i < HEIGHT; i++)		
 		for (j = 0; j < WIDTH; j++) {
 			area[i][j].setPos(j, i);
-			area[i][j].g = 80;
+			area[i][j].g = 1000;
 			if (map[i][j] == '#') {
 				area[i][j].isLet = false;
 				area[i][j].sym = '#';
@@ -134,20 +139,31 @@ int main()
 
 	vector <Cell> openSet, closeSet;
 
-	int startX = 0, startY = 0;
-	int targetX = WIDTH - 1, targetY = HEIGHT - 1;
+	int startX, startY;
+	do {
+		startX = rand() % WIDTH;
+		startY = rand() % HEIGHT;
+	} while (area[startY][startX].isLet == false);
+
+	int targetX, targetY;
+	do {
+		targetX = rand() % WIDTH;
+		targetY = rand() % HEIGHT;
+	} while (area[targetY][targetX].isLet == false);
+	
 
 	openSet.push_back(Cell(startX, startY));
 	openSet[0].g = 0;
 	openSet[0].h = distance(openSet[0], area[targetY][targetX]);
 	openSet[0].calcF();
-
-	// cout << "G = " << openSet[0].g << endl;
-	// cout << "H = " << openSet[0].h << endl;
-	// cout << "F = " << openSet[0].f << endl;
+	openSet[0].cameFrom = -1;
 
 	vector <Cell> path; // Path Cells
 	int k = 0; // Path cell index
+
+	
+
+	cout << "Finding best path..." << endl;
 
 	while (openSet.size() != 0) {
 		Cell current;
@@ -174,40 +190,32 @@ int main()
 
 		for (i = 0; i < neighbors.size(); i++)
 		{
+			//float g_tmp = current.g + distance(current, neighbors[i]);
 			float g_tmp = current.g + 1;
 			if (g_tmp < neighbors[i].g && neighbors[i].isLet == true) {
 				
-				neighbors[i].cameFrom = &path[k];
+				neighbors[i].cameFrom = k;
 				neighbors[i].g = g_tmp;
-				neighbors[i].f = g_tmp + distance(neighbors[i], area[targetY][targetX]);
+				neighbors[i].h = distance(neighbors[i], area[targetY][targetX]);
+				neighbors[i].calcF();
 
-				if (find(openSet.begin(), openSet.end(), neighbors[i]) == openSet.end())
+				if ( find(openSet.begin(), openSet.end(), neighbors[i]) == openSet.end())
 					openSet.push_back(neighbors[i]);
 			}
-
 		}
-
 		k++;
-		//Sleep(400);
 	}
 
-	cout << openSet.size() << endl;
-
-	for (int i = 0; i < path.size(); i++) {
-		area[path[i].y][path[i].x].sym = '+';
-	}
-
-	/*
 	Cell current = openSet[openSet.size() - 1];
 	do {
-		cout << "Came from X: " << current.x << " Y: " << current.y << endl;
-		current = *current.cameFrom;
-	} while (current.cameFrom != NULL);
-	*/
+		current = path[current.cameFrom];
+		area[current.y][current.x].sym = '+';
+	} while (current.cameFrom != -1);
 
 	area[startY][startX].sym = 'S';
 	area[targetY][targetX].sym = 'F';
 
+	// Drawing area
 	for (i = 0; i < HEIGHT; i++) {
 		for (j = 0; j < WIDTH; j++) {
 			if (area[i][j].sym == '+') SetColor(Yellow, Black);
@@ -221,6 +229,11 @@ int main()
 	}
 
 	SetColor(7, 0);
+	char ans;
+	cout << "Try again? (Y/n): ";
+	ans = (char)_getch();
 
+	if(ans == 'y' || ans == 'Y') main();
+	
 	return 0;
 }
