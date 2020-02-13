@@ -58,11 +58,13 @@ enum ConsoleColor
 	White = 15
 };
 
+// Cursor Position
 void gotoxy(int x, int y) {
 	COORD coord = { x, y };
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
+// Seting Cursor Color
 void SetColor(int text, int background)
 {
 	HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -116,13 +118,12 @@ float distance(Cell start, Cell finish) {
 int main()
 {
 	system("cls");
-	//gotoxy(0, 0);
 	srand(time(NULL));
 	int i, j;
 
 	Cell area[HEIGHT][WIDTH];
 
-	for (i = 0; i < HEIGHT; i++)		
+	for (i = 0; i < HEIGHT; i++) {
 		for (j = 0; j < WIDTH; j++) {
 			area[i][j].setPos(j, i);
 			area[i][j].g = 1000;
@@ -134,10 +135,10 @@ int main()
 				area[i][j].isLet = true;
 				area[i][j].sym = '.';
 			}
-			
 		}
+	}
 
-	vector <Cell> openSet, closeSet;
+	vector <Cell> openSet;
 
 	int startX, startY;
 	do {
@@ -151,7 +152,6 @@ int main()
 		targetY = rand() % HEIGHT;
 	} while (area[targetY][targetX].isLet == false);
 	
-
 	openSet.push_back(Cell(startX, startY));
 	openSet[0].g = 0;
 	openSet[0].h = distance(openSet[0], area[targetY][targetX]);
@@ -161,8 +161,7 @@ int main()
 	vector <Cell> path; // Path Cells
 	int k = 0; // Path cell index
 
-	
-
+	clock_t start = clock();
 	cout << "Finding best path..." << endl;
 
 	while (openSet.size() != 0) {
@@ -230,10 +229,15 @@ int main()
 
 	SetColor(7, 0);
 	char ans;
-	cout << "Try again? (Y/n): ";
-	ans = (char)_getch();
+	cout << "Path finded in " << clock() - start << "ms" << endl << endl;
+	do {
+		cout << "Try again? (Y/n): ";
+		ans = (char)_getch();
 
-	if(ans == 'y' || ans == 'Y') main();
+		if (ans == 'y' || ans == 'Y') main();
+		if (ans == 'n' || ans == 'N') exit(0);
+		cout << endl;
+	} while (true);
 	
 	return 0;
 }
