@@ -64,6 +64,7 @@ const char map[HEIGHT][WIDTH] = {
 };
 */
 
+// SMALL MAP 5x12
 /*
 const char map[HEIGHT][WIDTH] = {
 	"......#.....",
@@ -74,6 +75,8 @@ const char map[HEIGHT][WIDTH] = {
 };
 */
 
+
+// MEDIUM MAP 20x60
 const char map[HEIGHT][WIDTH] = {
 	"...#...............................#..........#............",
 	"...#...............................#.......................",
@@ -182,14 +185,13 @@ float distance(Cell start, Cell finish) {
 	return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy);
 }
 
-int main()
-{
-	system("cls");
-	srand(clock());
+// Pathfinding function
+vector <Cell> aStar(Cell start, Cell target, Cell area[HEIGHT][WIDTH]) {
+	vector <Cell> returnPath;
+	vector <Cell> openSet;
 	int i, j;
 
-	Cell area[HEIGHT][WIDTH];
-
+	// Area initialization from map
 	for (i = 0; i < HEIGHT; i++) {
 		for (j = 0; j < WIDTH; j++) {
 			area[i][j].setPos(j, i);
@@ -206,32 +208,13 @@ int main()
 		}
 	}
 
-	vector <Cell> openSet;
-
-	int startX = 0, startY = 1;
-	/*do {
-		startX = rand() % WIDTH;
-		startY = rand() % HEIGHT;
-	} while (area[startY][startX].isLet == false);
-	*/
-	int targetX = 43, targetY = 1;
-	/*do {
-		targetX = rand() % WIDTH;
-		targetY = rand() % HEIGHT;
-	} while (area[targetY][targetX].isLet == false);
-	*/
-
-	openSet.push_back(Cell(startX, startY));
+	openSet.push_back(start);
 	openSet[0].g = 0;
-	openSet[0].f = distance(openSet[0], area[targetY][targetX]);
+	openSet[0].f = distance(openSet[0], area[target.y][target.x]);
 	openSet[0].cameFrom = -1;
 
 	vector <Cell> path; // Path Cells
 	int k = 0; // Path cell index
-
-	clock_t start = clock();
-
-	cout << "Finding best path..." << endl;
 
 	while (openSet.size() != 0) {
 		Cell current;
@@ -243,9 +226,7 @@ int main()
 		current = openSet[minF];
 		path.push_back(current);
 
-		// cout << "Current Pos. X: " << current.x << " Y: " << current.y << endl;
-
-		if (current == area[targetY][targetX]) {
+		if (current == target) {
 			cout << "Path found!" << endl;
 			break;
 		}
@@ -258,16 +239,15 @@ int main()
 		for (i = 0; i < neighbors.size(); i++)
 		{
 			float g_tmp;
-			if(abs(current.x - neighbors[i].x) == 1 && abs(current.y - neighbors[i].y) == 1)
+			if (abs(current.x - neighbors[i].x) == 1 && abs(current.y - neighbors[i].y) == 1)
 				g_tmp = current.g + D2;
 			else
 				g_tmp = current.g + D;
-
 			if (g_tmp < neighbors[i].g && neighbors[i].isLet == true) {
 
 				neighbors[i].cameFrom = k;
 				neighbors[i].g = g_tmp;
-				neighbors[i].h = ceill(distance(neighbors[i], area[targetY][targetX]));
+				neighbors[i].h = ceill(distance(neighbors[i], target));
 				// neighbors[i].h = distance(neighbors[i], area[targetY][targetX]);
 				neighbors[i].calcF();
 
@@ -277,41 +257,79 @@ int main()
 		}
 		k++;
 	}
+
 	Cell current = openSet[openSet.size() - 1];
+
 	do {
 		current = path[current.cameFrom];
-		area[current.y][current.x].sym = '+';
+		returnPath.push_back(current);
 	} while (current.cameFrom != -1);
 
-	area[startY][startX].sym = 'S';
-	area[targetY][targetX].sym = 'F';
+	return returnPath;
+}
 
-	cout << endl;
-	// Drawing area
-	for (i = 0; i < HEIGHT; i++) {
-		for (j = 0; j < WIDTH; j++) {
-			if (area[i][j].sym == '+') SetColor(Yellow, Black);
-			if (area[i][j].sym == 'S') SetColor(LightGreen, Black);
-			if (area[i][j].sym == 'F') SetColor(LightRed, Black);
-			if (area[i][j].sym == '.') SetColor(DarkGray, Black);
-			if (area[i][j].sym == '#') SetColor(Red, Black);
-			cout << area[i][j].sym;
-		}
-		cout << endl;
-	}
+int main()
+{
+	system("cls");
+	srand(clock());
+	int i, j;
 
-	SetColor(7, 0);
-	char ans;
-	cout << "Start (X: " << startX << "; Y: " << startY << ")" << endl;
-	cout << "End (X: " << targetX << "; Y: " << targetY << ")" << endl;
-	cout << "Path finded in " << clock() - start << "ms" << endl << endl;
+	Cell area[HEIGHT][WIDTH];
+
 	do {
-		cout << "Try again? (Y/n): ";
-		ans = (char)_getch();
+		system("cls");
 
-		if (ans == 'y' || ans == 'Y') main();
-		if (ans == 'n' || ans == 'N') exit(0);
+		int startX = 0, startY = 1;
+		do {
+			startX = rand() % WIDTH;
+			startY = rand() % HEIGHT;
+		} while (area[startY][startX].isLet == false);
+		
+		int targetX = 43, targetY = 1;
+		do {
+			targetX = rand() % WIDTH;
+			targetY = rand() % HEIGHT;
+		} while (area[targetY][targetX].isLet == false);
+
+		clock_t start = clock(); // Starting timer
+
+		cout << "Finding best path..." << endl;
+
+		vector<Cell> path = aStar(Cell(startX, startY), Cell(targetX, targetY), area);
+
+		// path visualisation
+		for (i = 0; i < path.size(); i++)
+			area[path[i].y][path[i].x].sym = '+';
+
+		area[startY][startX].sym = 'S';
+		area[targetY][targetX].sym = 'F';
+
 		cout << endl;
+
+		// Drawing area
+		for (i = 0; i < HEIGHT; i++) {
+			for (j = 0; j < WIDTH; j++) {
+				if (area[i][j].sym == '+') SetColor(Yellow, Black);
+				if (area[i][j].sym == 'S') SetColor(LightGreen, Black);
+				if (area[i][j].sym == 'F') SetColor(LightRed, Black);
+				if (area[i][j].sym == '.') SetColor(DarkGray, Black);
+				if (area[i][j].sym == '#') SetColor(Red, Black);
+				cout << area[i][j].sym;
+			}
+			cout << endl;
+		}
+
+		SetColor(7, 0);
+		char ans;
+		cout << "Path finded in " << clock() - start << "ms" << endl << endl; // Timer end
+		
+		do {
+			cout << "Try again? (Y/n): ";
+			ans = (char)_getch();
+		} while (ans != 'y' || ans == 'Y' || ans == 'n' || ans == 'N');
+
+		if (ans == 'n' || ans == 'N') break;
+
 	} while (true);
 
 	return 0;
