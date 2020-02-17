@@ -33,7 +33,7 @@ map = [
 	"...####.##########.#########................#..............",
 	"...#......#................###########.....................",
 	"...#......#..........#####.#.........#### ###..............",
-	"...#.................#.....#.........#......#..............",
+	"...#.................#...............#......#..............",
 	"...#......#..........#.....#.........#......#.............."
 ];
 
@@ -67,6 +67,9 @@ def heruistic (start, finish):
 
 	return D * (dx + dy) + (D2 - 2 * D) * min(dx, dy);
 
+# Distance function
+def distance (start, finish):
+	return math.sqrt((finish.x - start.x) ** 2 + (finish.y - start.y) ** 2);
 
 def aStar (start, target, area):
 	path = [];
@@ -114,7 +117,7 @@ def aStar (start, target, area):
 
 		for neighbor in neighbors:
 			
-			gTemp = current.g + D;
+			gTemp = current.g + distance(current, neighbor);
 
 			if gTemp < neighbor.g and neighbor.isLet == False:
 				neighbor.cameFrom = current;
@@ -126,6 +129,7 @@ def aStar (start, target, area):
 
 	print("Path not found!");
 
+# Program start
 os.system('cls');
 area = [];
 
